@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>IntersectionObserver</title>
+</head>
+
+<body>
+  <style>
+    .b-wrap {
+      width: 300px;
+      height: 500px;
+      position: absolute;
+      left: 50px;
+      top: 50px;
+      overflow: auto;
+    }
+
+    .b-wrap--list-item {
+      float: left;
+      height: 330px;
+      width: 100%;
+    }
+  </style>
+  <div class="b-wrap">
+    <div class="b-wrap--list-item" style="background: rebeccapurple">1</div>
+    <div class="b-wrap--list-item" style="background: red">2</div>
+    <div class="b-wrap--list-item" style="background: green">3</div>
+    <div class="b-wrap--list-item" style="background: orange">4</div>
+    <div class="b-wrap--list-item" style="background: mintcream">5</div>
+  </div>
+  <script>
+    var chrome = (function () {
+      var Chrome = function () {
+        var math = navigator.userAgent.match(/Chrome\/[0-9]*/)
+        this.isChrome = false
+        if (math) {
+          this.isChrome = true
+          this.version = math[0].split('/')[1]
+        }
+      }
+      return new Chrome
+    })()
+    // Create a list of the features this browser needs.
+    // Beware of overly simplistic detects!
+    var features = [];
+    // ('Promise' in window) || features.push('Promise');
+    // ('IntersectionObserver' in window) || 
+    ('Set' in window) || features.push('Set');
+    if (!chrome.isChrome || chrome.version < 58) features.push('IntersectionObserver');
+    // ('after' in Element.prototype) || features.push('Element.prototype.after');
+    // ('assign' in Object) || features.push('Object.assign');
+    // If any features need to be polyfilled, construct
+    // a script tag to load the polyfills and append it
+    // to the document
+    if (features.length) {
+      var s = document.createElement('script');
+      s.src = 'https://polyfill.io/v2/polyfill.min.js?features=' + features.join(',') +
+        '&flags=gated,always&rum=0&callback=main';
+      s.async = true;
+      document.head.appendChild(s);
+    } else {
+      // If no polyfills are required, invoke the app
+      // without delay
+      main();
+    }
+
+
+    function main() {
+
+      var result = Array.prototype.slice.call(document.querySelectorAll('.b-wrap--list-item'))
+      var len = result.length
+      var set = new Set
+      var lazyImageObserver = new IntersectionObserver(function (entries, observer) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            var target = entry.target
+            lazyImageObserver.unobserve(target)
+            set.add(target)
+            if (set.size >= len) {
+              lazyImageObserver.disconnect()
+            }
+          }
+        })
+      })
+      result.forEach(function (item) {
+        lazyImageObserver.observe(item);
+      })
+
+    }
+  </script>
+</body>
+
+</html>
